@@ -321,6 +321,14 @@ module.exports = function (webpackEnv) {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         'react-native': 'react-native-web',
+
+        '@src': path.resolve(process.cwd(), 'src/'),
+        '@core': path.resolve(process.cwd(), 'src/core/'),
+        '@modules': path.resolve(process.cwd(), 'src/modules/'),
+        '@assets': path.resolve(process.cwd(), 'src/assets/'),
+        '@shared': path.resolve(process.cwd(), 'src/modules/shared/'),
+        '@icons': path.resolve(process.cwd(), 'src/modules/icons/'),
+
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -343,6 +351,11 @@ module.exports = function (webpackEnv) {
           babelRuntimeRegenerator,
         ]),
       ],
+      fallback: {
+        crypto: require.resolve('crypto-browserify'),
+        stream: require.resolve('stream-browserify'),
+        buffer: require.resolve('buffer'),
+      },
     },
     module: {
       strictExportPresence: true,
@@ -448,6 +461,7 @@ module.exports = function (webpackEnv) {
                 ),
                 // @remove-on-eject-end
                 plugins: [
+                  require.resolve('babel-plugin-styled-components'),
                   isEnvDevelopment &&
                     shouldUseReactRefresh &&
                     require.resolve('react-refresh/babel'),
@@ -581,6 +595,11 @@ module.exports = function (webpackEnv) {
                 },
                 'sass-loader'
               ),
+            },
+            {
+              test: /\.(graphql|gql)$/,
+              exclude: /node_modules/,
+              loader: 'graphql-tag/loader',
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
@@ -786,9 +805,21 @@ module.exports = function (webpackEnv) {
             },
           },
         }),
+      new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+      }),
+      new webpack.ProvidePlugin({
+        process: 'process/browser',
+      }),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,
+    stats: {
+      colors: true,
+      modules: true,
+      reasons: true,
+      errorDetails: true,
+    },
   };
 };
